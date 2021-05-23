@@ -1,70 +1,87 @@
-# Getting Started with Create React App
+# How to Create React Application
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+An opinionated version of CRA template with some exrta tools added by default.
 
-## Available Scripts
+## Tools
 
-In the project directory, you can run:
+- Uses [react-scripts v4](https://github.com/facebook/create-react-app/releases/tag/v4.0.0) with enabled fast-refresh and web-vitals support out of the box
+- .vscode/settings.json to use prettier as a default formatter and enable formatting on save
+- .vscode launch.json to enable debugging in vscode. Also it's encouraged to use popular [Jest](https://github.com/jest-community/vscode-jest) extension
+- added [husky](https://typicode.github.io/husky/#/) with [prettier](https://prettier.io/docs/en/install.html) and [lint-staged](https://github.com/okonet/lint-staged#readme) for pre-commit hook with respective configurations inside package.json
+- customized linter config (refer to package.json)
+- added [storybook](https://storybook.js.org/docs/react/get-started/install) for faster component development
+- added "analyze" script to analyze a bundle size
 
-### `npm start`
+## Performance recommendations and best practices:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+- Use memoization ( pure components, useMemo, useCallback, reselect, ...):
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+  - Remember that functional components are not pure by default. You should wrap them with React.memo to make "pure".
+  - You might not need to make all components "pure" by default and first investigate which components are frequently re-rendered,
+    but very often you can foresee where better to add React.memo wrapper, for example to lists items, parent components for a large component tree, etc.
+  - If you are not sure you will have enough time to investigate and improve the performance, you might want to use "pure" components by default as "shallow" comparison
+    will be much cheaper than the component react component "render".
 
-### `npm test`
+- Keep an eye on properties you pass to component to avoid additional re-renders:
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+  bad:
 
-### `npm run build`
+  ```
+  <MyComponent myComponentProps={{ …someProps, newProp : ‘test’ }} />
+  ```
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+  good:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+  ```
+  <MyComponent {{ …someProps }} newProp={‘test’} }} />
+  ```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  </br>
+   bad:
 
-### `npm run eject`
+  ```
+  <MyComponent myCallback={() => {...}} />
+  ```
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+  good:
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+  ```
+  <MyComponent myCallback={myMemoizedCallback} />
+  ```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+  </br>
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+- Same for properties passed ot a context:
+  bad:
 
-## Learn More
+```
+<MyContext.Provider value={{ ...someProps}}>...</MyContext.Provider>
+```
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+good:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+const memoizedContextProps = useMemo(() => {...deps}, [...deps]);
+<MyContext.Provider value={ memoizedContextProps}>...</MyContext.Provider>
+```
 
-### Code Splitting
+- Use "renderSomething" method pattern with a causion inside components. It might be better to create a separate component
+  to let react control rendering and avoid additional re-renders
+- Component "key" property should be unique, but stable. Don't use uuid() as a key property as soon as it generates new key every time.
+- Use chrome developer tools "Performance" tab and react developer tools "Profiler" tab to inspect slow places
+- Use code splitting with React.lazy,Suspense and redux-injector functions from "utils" to dynamically inject sagas and reducers (examples at https://www.npmjs.com/package/redux-injectors)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+## Customization
 
-### Analyzing the Bundle Size
+- As an "eject" alternative use [craco](https://github.com/gsoft-inc/craco) package to customize the webpack build
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Testing in VSCode
 
-### Making a Progressive Web App
+- You can debug tests in VSCode: launch configuration already added
+- Recommended to use [Jest](https://github.com/jest-community/vscode-jest) extension with enabled "show coverage" option to track test coverage immediately
+- Recommended to use [Jest runner](https://marketplace.visualstudio.com/items?itemName=firsttris.vscode-jest-runner) extension to run and debug individual tests easily: above each "describe" and "test" the repsective "Run|Debug" links will appear. Refer to this issue wit the latest react-scripts: https://github.com/firsttris/vscode-jest-runner/issues/136
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+## Usage with redux
 
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- Use redux chrome extension
+- Use [@reduxjs/toolkit](https://redux-toolkit.js.org/tutorials/basic-tutorial) to create actions and reducers
