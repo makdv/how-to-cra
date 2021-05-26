@@ -69,11 +69,17 @@ const memoizedContextProps = useMemo(() => {...deps}, [...deps]);
   to let react control rendering and avoid additional re-renders
 - Component "key" property should be unique, but stable. Don't use uuid() as a key property as soon as it generates new key every time.
 - Use chrome developer tools "Performance" tab and react developer tools "Profiler" tab to inspect slow places
-- Use code splitting with React.lazy,Suspense and redux-injector functions from "utils" to dynamically inject sagas and reducers (examples at https://www.npmjs.com/package/redux-injectors)
-
+- Use code splitting with React.lazy,Suspense and redux-injector functions from "utils" to dynamically inject sagas and reducers (examples at https://www.npmjs.com/package/redux-injectors). To investigate if it works well enough: open DevTools → Ctrl/⌘+P → Coverage → "Start instrumenting...".
+- If you want to preload fonts, make sure you use the crossorigin="anonymous" attribute.
+- If you have images, check if you can use smaller size, dont forget to compress images (image-webpack-loader in front of url-loader) and probably you can use 
+ `loading="lazy"` attribute inside `<img>` tag
+ 
 ## Customization
 
 - As an "eject" alternative use [craco](https://github.com/gsoft-inc/craco) package to customize the webpack build
+- If you are using material-ui, ensure that the tree shakuing works well, if not check out this page to configure babel: https://material-ui.com/ru/guides/minimizing-bundle-size/
+- If you are using lodash: try `babel-plugin-lodash` to make such import as `import { get } from 'lodash'` into `import get from 'lodash/get'`, which helps to avoig bundling the whole library
+- Try `purgecss-webpack-plugin` to remove an unused css
 
 ## Testing in VSCode
 
